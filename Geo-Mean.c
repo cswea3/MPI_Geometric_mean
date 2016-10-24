@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////
-// Author: Craig Swearingen
-// Original: 23 October 2016
-// Last modified: 23 October 3016
+// Author:        Craig Swearingen
+// Original:      23 October 2016
+// Last modified: 23 October 2016
 //
 // Purpose: Implement a parallel geometric mean algorithm
 //
