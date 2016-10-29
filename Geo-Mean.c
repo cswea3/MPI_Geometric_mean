@@ -1,14 +1,14 @@
 /////////////////////////////////////////////////////////////
 // Author:        Craig Swearingen
 // Original:      23 October 2016
-// Last modified: 23 October 2016
+// Last modified: 29 October 2016
 //
 // Purpose: Implement a parallel geometric mean algorithm
 //
-// Compile:  mpicc Geo-Mean.c -o Geo-Mean
+// Compile:  mpicc Geo-Mean.c -lm -o Geo-Mean
 //
 // Run:
-//      mpiexec - n  <p>  ./Geo-Mean  <v>
+//      mpiexec -n  <p>  ./Geo-Mean  <v>
 //        -p : the number of processes
 //        -v : number of elements in the vector
 //
@@ -19,9 +19,13 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
+#include <sys/time.h>
 
 void GetArgs(int, char**, int*, int );
+
 void Error();
+
+double Seconds();
 
 int main(int argc, char* argv[])
 {
@@ -35,8 +39,11 @@ int main(int argc, char* argv[])
 	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);
 
+    double start_time = Seconds();
+
     // Read arguments from the command line and exit if arguments are improper
-    GetArgs(argc, argv, &vector_size, my_rank);
+   	//if(my_rank == 0)
+    	GetArgs(argc, argv, &vector_size, my_rank);
 
     // Get the number of vector elements each process will calculate
 	int factor = vector_size / comm_sz;
@@ -65,8 +72,10 @@ int main(int argc, char* argv[])
 	// Print the sum, vector size, and geometric mean
     if(my_rank == 0)
     {
+    	double finish_time = Seconds();
     	printf("Sum: %f\nVector Size: %d\n", sum, vector_size);
     	printf("Geometric mean: %f\n", pow(sum,(1/(double) vector_size)));
+    	printf("Processing time: %f\n", finish_time - start_time);
     }
 
     
@@ -80,7 +89,7 @@ int main(int argc, char* argv[])
 // Postcondition: Error message is printed showing the correct usage
 void Error()
 {
-	fprintf(stderr, "usage: mpiexec -n <p> ./Geo-Mean <size of vector>\n");
+	fprintf(stderr, "usage: mpiexec -n <p> ./Geo-Mean <size of vector>[1-8]\n");
 	fflush(stderr);
 }
 
@@ -94,7 +103,9 @@ void GetArgs(int a, char** b, int* c, int d)
 		if(a != 2)
 		{
 			Error();
-			MPI_Finalize();
+			exit(-1);
+		}else if(atoi(&b[1][0]) > 8 || atoi(&b[1][0]) < 1){
+			Error();
 			exit(-1);
 		}else
 		{
@@ -105,4 +116,11 @@ void GetArgs(int a, char** b, int* c, int d)
 
 	}
 	MPI_Bcast(c,1,MPI_INT,0,MPI_COMM_WORLD);
+}
+
+double Seconds()
+{
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    return ((double) tp.tv_sec + (double) tp.tv_usec*1.e-6);
 }
